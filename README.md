@@ -1,7 +1,15 @@
-# Corporate Training & Certification Tracker
+<div align="center">
 
+  # CERTII 
+  
+  **CERTIFICATION TRACKER// ANALYSIS // DASHBOARD //**
+
+  <img src="assets/img/certiiheader.png" width="100%" alt="Termii Header" />
+
+</div>
 Tracks employee training completion, certification validity, and upcoming renewals across Employee, Manager, and Admin roles.
 
+---
 ## Installation (Laragon)
 
 1. Place the `certii` folder inside your Laragon `www` directory, e.g. `C:\laragon\www\certii`. If you already have another project in `www`, just make sure the folder name `certii` doesn't collide with it.
