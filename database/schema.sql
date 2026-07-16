@@ -26,6 +26,7 @@ CREATE TABLE COURSE (
     InstructorID INT,
     Title VARCHAR(150) NOT NULL,
     Category VARCHAR(100),
+    CourseFile VARCHAR(255),
     FOREIGN KEY (InstructorID) REFERENCES INSTRUCTOR(InstructorID) ON DELETE SET NULL
 );
 
@@ -53,7 +54,14 @@ CREATE TABLE CERTIFICATION (
 INSERT INTO EMPLOYEE (Name, Department, Email, Password, Role) VALUES
 ('Admin User', 'IT', 'admin@example.com', '$2y$10$4vR8xmqGxldI.d6g.3qgi.cWH2jJugxjQ.4fj2fhnJ788xwoDHdlW', 'Admin'),
 ('Manager User', 'HR', 'manager@example.com', '$2y$10$4vR8xmqGxldI.d6g.3qgi.cWH2jJugxjQ.4fj2fhnJ788xwoDHdlW', 'Manager'),
-('John Doe', 'Engineering', 'employee@example.com', '$2y$10$4vR8xmqGxldI.d6g.3qgi.cWH2jJugxjQ.4fj2fhnJ788xwoDHdlW', 'Employee');
+('John Doe', 'Engineering', 'employee@example.com', '$2y$10$4vR8xmqGxldI.d6g.3qgi.cWH2jJugxjQ.4fj2fhnJ788xwoDHdlW', 'Employee'),
+('Jesse Barnes', 'Operations', 'jesse.barnes@example.com', '$2y$10$4vR8xmqGxldI.d6g.3qgi.cWH2jJugxjQ.4fj2fhnJ788xwoDHdlW', 'Employee'),
+('Monica Reyes', 'Finance', 'monica.reyes@example.com', '$2y$10$4vR8xmqGxldI.d6g.3qgi.cWH2jJugxjQ.4fj2fhnJ788xwoDHdlW', 'Employee'),
+('Trevor Park', 'Sales', 'trevor.park@example.com', '$2y$10$4vR8xmqGxldI.d6g.3qgi.cWH2jJugxjQ.4fj2fhnJ788xwoDHdlW', 'Employee'),
+('Priya Singh', 'Marketing', 'priya.singh@example.com', '$2y$10$4vR8xmqGxldI.d6g.3qgi.cWH2jJugxjQ.4fj2fhnJ788xwoDHdlW', 'Employee'),
+('Maya Lopez', 'Customer Success', 'maya.lopez@example.com', '$2y$10$4vR8xmqGxldI.d6g.3qgi.cWH2jJugxjQ.4fj2fhnJ788xwoDHdlW', 'Employee'),
+('Damian Lee', 'Product', 'damian.lee@example.com', '$2y$10$4vR8xmqGxldI.d6g.3qgi.cWH2jJugxjQ.4fj2fhnJ788xwoDHdlW', 'Employee'),
+('Nina Chen', 'Support', 'nina.chen@example.com', '$2y$10$4vR8xmqGxldI.d6g.3qgi.cWH2jJugxjQ.4fj2fhnJ788xwoDHdlW', 'Employee');
 
 INSERT INTO INSTRUCTOR (Name, Expertise, Type) VALUES
 ('Alice Smith', 'Cybersecurity', 'Internal'),
@@ -61,7 +69,15 @@ INSERT INTO INSTRUCTOR (Name, Expertise, Type) VALUES
 
 INSERT INTO COURSE (InstructorID, Title, Category) VALUES
 (1, 'Data Privacy Basics', 'Security'),
-(2, 'Workplace Safety 101', 'Compliance');
+(1, 'Secure Password Best Practices', 'Security'),
+(2, 'Workplace Safety 101', 'Compliance'),
+(2, 'Anti-Harassment Awareness', 'Compliance'),
+(1, 'Phishing Defense', 'Security'),
+(2, 'Remote Work Security', 'Security'),
+(1, 'Policy Review: Ethics', 'Compliance'),
+(2, 'Fire Safety Essentials', 'Safety'),
+(1, 'Incident Response Basics', 'Security'),
+(2, 'Accessibility Awareness', 'Culture');
 
 INSERT INTO COURSE_ENROLLMENT (EmployeeID, CourseID, EnrollmentDate, Status) VALUES
 (3, 1, '2026-06-01', 'Completed'),

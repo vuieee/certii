@@ -2,7 +2,7 @@
 session_start();
 require '../config/db.php';
 require_once '../includes/functions.php';
-requireRole(['Admin']);
+requireRole(['Admin', 'Manager']);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = htmlspecialchars($_POST['title']);
@@ -11,6 +11,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $stmt = $pdo->prepare('INSERT INTO COURSE (InstructorID, Title, Category) VALUES (?, ?, ?)');
     $stmt->execute([$instructorId, $title, $category]);
+    $courseId = (int) $pdo->lastInsertId();
+
+    $courseFilePath = null;
+    if (!empty($_FILES['course_file']['tmp_name'])) {
+        $uploadDir = __DIR__ . '/../uploads/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+
+        $fileName = preg_replace('/[^A-Za-z0-9._-]/', '_', basename($_FILES['course_file']['name']));
+        $filePath = 'uploads/' . uniqid('course_', true) . '_' . $fileName;
+
+        if (move_uploaded_file($_FILES['course_file']['tmp_name'], __DIR__ . '/../' . $filePath)) {
+            $courseFilePath = $filePath;
+        }
+    }
+
+    if ($courseFilePath !== null) {
+        $stmt = $pdo->prepare('UPDATE COURSE SET CourseFile = ? WHERE CourseID = ?');
+        $stmt->execute([$courseFilePath, $courseId]);
+    }
 
     flash('success', 'Course created successfully.');
     header('Location: courses.php');
@@ -27,7 +48,7 @@ $instructors = $pdo->query('SELECT * FROM INSTRUCTOR ORDER BY Name')->fetchAll()
 <p class="page-subtitle">Add a new course to the training catalog.</p>
 
 <div class="card form-card">
-    <form method="POST">
+    <form method="POST" enctype="multipart/form-data">
         <div class="form-group">
             <label for="title">Course title</label>
             <input type="text" id="title" name="title" required>
@@ -35,6 +56,11 @@ $instructors = $pdo->query('SELECT * FROM INSTRUCTOR ORDER BY Name')->fetchAll()
         <div class="form-group">
             <label for="category">Category</label>
             <input type="text" id="category" name="category" placeholder="e.g. Security, Compliance">
+        </div>
+        <div class="form-group">
+            <label for="course_file">Course file</label>
+            <input type="file" id="course_file" name="course_file" accept=".pdf,.doc,.docx,.ppt,.pptx,.zip">
+            <div class="form-hint">Upload a PDF or supporting file to represent the mock course.</div>
         </div>
         <div class="form-group">
             <label for="instructor_id">Instructor</label>

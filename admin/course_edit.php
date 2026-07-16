@@ -2,7 +2,7 @@
 session_start();
 require '../config/db.php';
 require_once '../includes/functions.php';
-requireRole(['Admin']);
+requireRole(['Admin', 'Manager']);
 
 $id = (int) ($_GET['id'] ?? 0);
 
@@ -20,9 +20,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = htmlspecialchars($_POST['title']);
     $category = htmlspecialchars($_POST['category']);
     $instructorId = $_POST['instructor_id'] !== '' ? (int) $_POST['instructor_id'] : null;
+    $courseFilePath = $course['CourseFile'];
 
-    $stmt = $pdo->prepare('UPDATE COURSE SET Title = ?, Category = ?, InstructorID = ? WHERE CourseID = ?');
-    $stmt->execute([$title, $category, $instructorId, $id]);
+    if (!empty($_FILES['course_file']['tmp_name'])) {
+        $uploadDir = __DIR__ . '/../uploads/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+
+        $fileName = preg_replace('/[^A-Za-z0-9._-]/', '_', basename($_FILES['course_file']['name']));
+        $newPath = 'uploads/' . uniqid('course_', true) . '_' . $fileName;
+
+        if (move_uploaded_file($_FILES['course_file']['tmp_name'], __DIR__ . '/../' . $newPath)) {
+            if ($courseFilePath && file_exists(__DIR__ . '/../' . $courseFilePath)) {
+                unlink(__DIR__ . '/../' . $courseFilePath);
+            }
+            $courseFilePath = $newPath;
+        }
+    }
+
+    $stmt = $pdo->prepare('UPDATE COURSE SET Title = ?, Category = ?, InstructorID = ?, CourseFile = ? WHERE CourseID = ?');
+    $stmt->execute([$title, $category, $instructorId, $courseFilePath, $id]);
 
     flash('success', 'Course updated successfully.');
     header('Location: courses.php');
@@ -39,7 +57,7 @@ $instructors = $pdo->query('SELECT * FROM INSTRUCTOR ORDER BY Name')->fetchAll()
 <p class="page-subtitle">Update <?= htmlspecialchars($course['Title']) ?>.</p>
 
 <div class="card form-card">
-    <form method="POST">
+    <form method="POST" enctype="multipart/form-data">
         <div class="form-group">
             <label for="title">Course title</label>
             <input type="text" id="title" name="title" value="<?= htmlspecialchars($course['Title']) ?>" required>
@@ -56,6 +74,14 @@ $instructors = $pdo->query('SELECT * FROM INSTRUCTOR ORDER BY Name')->fetchAll()
                     <option value="<?= $instructor['InstructorID'] ?>" <?= $course['InstructorID'] == $instructor['InstructorID'] ? 'selected' : '' ?>><?= htmlspecialchars($instructor['Name']) ?></option>
                 <?php endforeach; ?>
             </select>
+        </div>
+        <div class="form-group">
+            <label for="course_file">Course file</label>
+            <input type="file" id="course_file" name="course_file" accept=".pdf,.doc,.docx,.ppt,.pptx,.zip">
+            <?php if (!empty($course['CourseFile'])): ?>
+                <div class="form-hint">Current file: <a href="../<?= htmlspecialchars($course['CourseFile']) ?>" target="_blank"><?= htmlspecialchars(basename($course['CourseFile'])) ?></a></div>
+            <?php endif; ?>
+            <div class="form-hint">Upload a new file to replace the mock course content.</div>
         </div>
         <div class="form-actions">
             <button type="submit" class="btn">Save Changes</button>

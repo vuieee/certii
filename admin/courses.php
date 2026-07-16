@@ -2,7 +2,7 @@
 session_start();
 require '../config/db.php';
 require_once '../includes/functions.php';
-requireRole(['Admin']);
+requireRole(['Admin', 'Manager']);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['instructor_name'])) {
     $name = htmlspecialchars($_POST['instructor_name']);
@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['instructor_name'])) {
 require '../includes/header.php';
 
 $courses = $pdo->query('
-    SELECT c.CourseID, c.Title, c.Category, i.Name AS InstructorName
+    SELECT c.CourseID, c.Title, c.Category, c.CourseFile, i.Name AS InstructorName
     FROM COURSE c
     LEFT JOIN INSTRUCTOR i ON c.InstructorID = i.InstructorID
     ORDER BY c.Title
@@ -42,16 +42,24 @@ $instructors = $pdo->query('SELECT * FROM INSTRUCTOR ORDER BY Name')->fetchAll()
             <th>Title</th>
             <th>Category</th>
             <th>Instructor</th>
+            <th>File</th>
             <th>Actions</th>
         </tr>
         <?php if (empty($courses)): ?>
-            <tr><td colspan="4" class="empty-state">No courses yet.</td></tr>
+            <tr><td colspan="5" class="empty-state">No courses yet.</td></tr>
         <?php endif; ?>
         <?php foreach ($courses as $course): ?>
         <tr>
             <td><?= htmlspecialchars($course['Title']) ?></td>
             <td><?= htmlspecialchars($course['Category'] ?? 'General') ?></td>
             <td><?= htmlspecialchars($course['InstructorName'] ?? 'Unassigned') ?></td>
+            <td>
+                <?php if (!empty($course['CourseFile'])): ?>
+                    <a href="../<?= htmlspecialchars($course['CourseFile']) ?>" target="_blank">Open</a>
+                <?php else: ?>
+                    None
+                <?php endif; ?>
+            </td>
             <td class="text-actions">
                 <a class="edit" href="course_edit.php?id=<?= $course['CourseID'] ?>">Edit</a>
                 <a class="delete" href="course_delete.php?id=<?= $course['CourseID'] ?>" onclick="return confirm('Delete this course? Enrollments and certifications tied to it will also be removed.')">Delete</a>

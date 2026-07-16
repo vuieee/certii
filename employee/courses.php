@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['course_id'])) {
 require '../includes/header.php';
 
 $stmt = $pdo->prepare('
-    SELECT c.CourseID, c.Title, c.Category, i.Name AS InstructorName
+    SELECT c.CourseID, c.Title, c.Category, c.CourseFile, i.Name AS InstructorName
     FROM COURSE c
     LEFT JOIN INSTRUCTOR i ON c.InstructorID = i.InstructorID
     WHERE c.CourseID NOT IN (
@@ -51,10 +51,11 @@ $courses = $stmt->fetchAll();
             <th>Course</th>
             <th>Category</th>
             <th>Instructor</th>
+            <th>File</th>
             <th></th>
         </tr>
         <?php if (empty($courses)): ?>
-            <tr><td colspan="4" class="empty-state">You're enrolled in everything currently offered.</td></tr>
+            <tr><td colspan="5" class="empty-state">You're enrolled in everything currently offered.</td></tr>
         <?php endif; ?>
         <?php foreach ($courses as $course): ?>
         <tr>
@@ -62,7 +63,15 @@ $courses = $stmt->fetchAll();
             <td><?= htmlspecialchars($course['Category'] ?? 'General') ?></td>
             <td><?= htmlspecialchars($course['InstructorName'] ?? 'Unassigned') ?></td>
             <td>
-                <form method="POST">
+                <?php if (!empty($course['CourseFile'])): ?>
+                    <a href="../<?= htmlspecialchars($course['CourseFile']) ?>" target="_blank">Download</a>
+                <?php else: ?>
+                    None
+                <?php endif; ?>
+            </td>
+            <td class="text-actions">
+                <a class="edit" href="course_detail.php?id=<?= $course['CourseID'] ?>">View</a>
+                <form method="POST" style="display:inline; margin-left:0.75rem;">
                     <input type="hidden" name="course_id" value="<?= $course['CourseID'] ?>">
                     <button type="submit" class="btn btn-sm">Enroll</button>
                 </form>

@@ -73,6 +73,7 @@ a { color: inherit; }
 
 .app-shell {
     display: flex;
+    align-items: flex-start;
     gap: 1.25rem;
     padding: 1.25rem;
     min-height: 100vh;
@@ -81,6 +82,7 @@ a { color: inherit; }
 .sidebar {
     width: 250px;
     flex-shrink: 0;
+    align-self: flex-start;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-xl);
