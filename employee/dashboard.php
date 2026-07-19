@@ -8,7 +8,7 @@ require '../includes/header.php';
 $userId = $_SESSION['user_id'];
 
 $stmt = $pdo->prepare('
-    SELECT c.Title, c.Category, e.Status, e.EnrollmentDate
+    SELECT c.CourseID, c.Title, c.Category, e.Status, e.EnrollmentDate
     FROM COURSE_ENROLLMENT e
     JOIN COURSE c ON e.CourseID = c.CourseID
     WHERE e.EmployeeID = ?
@@ -18,7 +18,7 @@ $stmt->execute([$userId]);
 $enrollments = $stmt->fetchAll();
 
 $stmt = $pdo->prepare('
-    SELECT c.Title, cert.IssueDate, cert.ExpirationDate
+    SELECT c.CourseID, c.Title, cert.IssueDate, cert.ExpirationDate
     FROM CERTIFICATION cert
     JOIN COURSE c ON cert.CourseID = c.CourseID
     WHERE cert.EmployeeID = ?
@@ -42,9 +42,10 @@ $certifications = $stmt->fetchAll();
             <th>Issue Date</th>
             <th>Expiration Date</th>
             <th>Status</th>
+            <th></th>
         </tr>
         <?php if (empty($certifications)): ?>
-            <tr><td colspan="4" class="empty-state">No certifications on record yet.</td></tr>
+            <tr><td colspan="5" class="empty-state">No certifications on record yet.</td></tr>
         <?php endif; ?>
         <?php foreach ($certifications as $cert): $status = certStatus($cert['ExpirationDate']); ?>
         <tr>
@@ -52,6 +53,12 @@ $certifications = $stmt->fetchAll();
             <td><?= htmlspecialchars($cert['IssueDate']) ?></td>
             <td><?= htmlspecialchars($cert['ExpirationDate']) ?></td>
             <td><span class="badge <?= $status['class'] ?>"><?= $status['label'] ?></span></td>
+            <td class="text-actions">
+                <a class="edit" href="course_detail.php?id=<?= $cert['CourseID'] ?>">View</a>
+                <?php if (isset($status['label']) && $status['label'] === 'Expired'): ?>
+                    <a class="edit" href="mailto:admin@company.com" style="margin-left: 0.75rem;">Contact Admin</a>
+                <?php endif; ?>
+            </td>
         </tr>
         <?php endforeach; ?>
     </table>
@@ -67,9 +74,10 @@ $certifications = $stmt->fetchAll();
             <th>Category</th>
             <th>Enrollment Date</th>
             <th>Status</th>
+            <th></th>
         </tr>
         <?php if (empty($enrollments)): ?>
-            <tr><td colspan="4" class="empty-state">You're not enrolled in any courses yet.</td></tr>
+            <tr><td colspan="5" class="empty-state">You're not enrolled in any courses yet.</td></tr>
         <?php endif; ?>
         <?php foreach ($enrollments as $enr): ?>
         <tr>
@@ -77,6 +85,9 @@ $certifications = $stmt->fetchAll();
             <td><?= htmlspecialchars($enr['Category']) ?></td>
             <td><?= htmlspecialchars($enr['EnrollmentDate']) ?></td>
             <td><span class="badge <?= $enr['Status'] === 'Completed' ? 'valid' : 'neutral' ?>"><?= htmlspecialchars($enr['Status']) ?></span></td>
+            <td class="text-actions">
+                <a class="edit" href="course_detail.php?id=<?= $enr['CourseID'] ?>">View</a>
+            </td>
         </tr>
         <?php endforeach; ?>
     </table>

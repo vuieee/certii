@@ -4,16 +4,34 @@ require '../config/db.php';
 require_once '../includes/functions.php';
 requireRole(['Admin', 'Manager']);
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['instructor_name'])) {
-    $name = htmlspecialchars($_POST['instructor_name']);
-    $expertise = htmlspecialchars($_POST['instructor_expertise']);
-    $type = $_POST['instructor_type'];
+// Handle POST requests for Instructors (Add & Remove)
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['action']) && $_POST['action'] === 'remove_instructor') {
+        $instructorId = (int)$_POST['instructor_id'];
 
-    $stmt = $pdo->prepare('INSERT INTO INSTRUCTOR (Name, Expertise, Type) VALUES (?, ?, ?)');
-    $stmt->execute([$name, $expertise, $type]);
-    flash('success', 'Instructor added.');
-    header('Location: courses.php');
-    exit();
+        // Unassign instructor from courses before deleting to prevent DB errors
+        $stmt = $pdo->prepare('UPDATE COURSE SET InstructorID = NULL WHERE InstructorID = ?');
+        $stmt->execute([$instructorId]);
+
+        // Delete instructor
+        $stmt = $pdo->prepare('DELETE FROM INSTRUCTOR WHERE InstructorID = ?');
+        $stmt->execute([$instructorId]);
+
+        flash('success', 'Instructor successfully removed.');
+        header('Location: courses.php');
+        exit();
+    } elseif (isset($_POST['instructor_name'])) {
+        $name = htmlspecialchars($_POST['instructor_name']);
+        $expertise = htmlspecialchars($_POST['instructor_expertise']);
+        $type = $_POST['instructor_type'];
+
+        $stmt = $pdo->prepare('INSERT INTO INSTRUCTOR (Name, Expertise, Type) VALUES (?, ?, ?)');
+        $stmt->execute([$name, $expertise, $type]);
+        
+        flash('success', 'Instructor added.');
+        header('Location: courses.php');
+        exit();
+    }
 }
 
 require '../includes/header.php';
@@ -25,7 +43,14 @@ $courses = $pdo->query('
     ORDER BY c.Title
 ')->fetchAll();
 
-$instructors = $pdo->query('SELECT * FROM INSTRUCTOR ORDER BY Name')->fetchAll();
+// Fetch instructors with their course count
+$instructors = $pdo->query('
+    SELECT i.InstructorID, i.Name, i.Expertise, i.Type, COUNT(c.CourseID) as CourseCount
+    FROM INSTRUCTOR i
+    LEFT JOIN COURSE c ON i.InstructorID = c.InstructorID
+    GROUP BY i.InstructorID, i.Name, i.Expertise, i.Type
+    ORDER BY i.Name
+')->fetchAll();
 ?>
 
 <div class="eyebrow">Admin Workspace</div>
@@ -78,17 +103,28 @@ $instructors = $pdo->query('SELECT * FROM INSTRUCTOR ORDER BY Name')->fetchAll()
             <th>Name</th>
             <th>Expertise</th>
             <th>Type</th>
+            <th>Assigned Courses</th>
+            <th>Actions</th>
         </tr>
         <?php foreach ($instructors as $instructor): ?>
         <tr>
             <td><?= htmlspecialchars($instructor['Name']) ?></td>
             <td><?= htmlspecialchars($instructor['Expertise']) ?></td>
             <td><span class="badge neutral"><?= htmlspecialchars($instructor['Type']) ?></span></td>
+            <td><?= (int)$instructor['CourseCount'] ?> course(s)</td>
+            <td class="text-actions">
+                <form method="POST" style="display:inline;" onsubmit="return confirm('Delete this instructor? Any courses they teach will be marked as Unassigned.');">
+                    <input type="hidden" name="action" value="remove_instructor">
+                    <input type="hidden" name="instructor_id" value="<?= $instructor['InstructorID'] ?>">
+                    <button type="submit" class="delete" style="background: transparent; border: none; padding: 0; cursor: pointer; font-size: 0.88rem; font-weight: 500; font-family: inherit;">Delete</button>
+                </form>
+            </td>
         </tr>
         <?php endforeach; ?>
     </table>
 
-    <form method="POST" style="margin-top: 1.5rem;">
+    <form method="POST" style="margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
+        <h3 style="font-size: 1rem; margin-bottom: 1rem;">Add New Instructor</h3>
         <div class="form-group">
             <label for="instructor_name">Instructor name</label>
             <input type="text" id="instructor_name" name="instructor_name" required>
