@@ -1,7 +1,5 @@
 # Certii
 
-A corporate training and certification tracker for employees, managers, and administrators.
-
 <img src="assets/img/certiiheader.png" width="100%" alt="Certii dashboard" />
 
 ## Course Information
